@@ -60,10 +60,10 @@ export async function buildQuarterlyReview(
 			plugin.app,
 		);
 
-		// Check if Periodic Notes plugin is available
+		// Check if daily/weekly notes functionality is available
 		if (!periodicNotesIntegration.isPeriodicNotesAvailable()) {
 			new Notice(
-				"Periodic Notes plugin is required but not found. Please install and enable it.",
+				"Daily/Weekly notes functionality is not available. Please enable Daily Notes or install Periodic Notes plugin.",
 			);
 			return;
 		}
