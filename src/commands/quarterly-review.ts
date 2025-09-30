@@ -1,49 +1,34 @@
 import { Notice, Plugin, SuggestModal, TFile } from "obsidian";
 import { QuarterlyReviewSettings } from "../settings";
 import { PeriodicNotesUtil, NotesInfo } from "../utils/periodic-notes-util";
+import { generateQuarters, QuarterInfo } from "../utils/quarter-utils";
 
-interface Quarter {
-	label: string;
-	date: Date;
-	quarter: number;
-	year: number;
-}
-
-class QuarterSelectionModal extends SuggestModal<Quarter> {
+class QuarterSelectionModal extends SuggestModal<QuarterInfo> {
 	plugin: Plugin & { settings: QuarterlyReviewSettings };
-	onChoose: (quarter: Quarter) => void;
+	onChoose: (quarter: QuarterInfo) => void;
 
 	constructor(
 		plugin: Plugin & { settings: QuarterlyReviewSettings },
-		onChoose: (quarter: Quarter) => void,
+		onChoose: (quarter: QuarterInfo) => void,
 	) {
 		super(plugin.app);
 		this.plugin = plugin;
 		this.onChoose = onChoose;
 	}
 
-	getSuggestions(query: string): Quarter[] {
-		const quarters = this.plugin.settings.quarters.map((date, index) => {
-			const quarter = Math.floor(index % 4) + 1;
-			const year = date.getFullYear();
-			return {
-				label: `Q${quarter} ${year}`,
-				date: date,
-				quarter: quarter,
-				year: year,
-			};
-		});
+	getSuggestions(query: string): QuarterInfo[] {
+		const quarters = generateQuarters(6);
 
 		return quarters.filter((quarter) =>
-			quarter.label.toLowerCase().includes(query.toLowerCase()),
+			quarter.dateRangeLabel.toLowerCase().includes(query.toLowerCase()),
 		);
 	}
 
-	renderSuggestion(quarter: Quarter, el: HTMLElement) {
-		el.createEl("div", { text: quarter.label });
+	renderSuggestion(quarter: QuarterInfo, el: HTMLElement) {
+		el.createEl("div", { text: quarter.dateRangeLabel });
 	}
 
-	onChooseSuggestion(quarter: Quarter, evt: MouseEvent | KeyboardEvent) {
+	onChooseSuggestion(quarter: QuarterInfo, evt: MouseEvent | KeyboardEvent) {
 		this.onChoose(quarter);
 	}
 }
@@ -52,10 +37,8 @@ export async function buildQuarterlyReview(
 	plugin: Plugin & { settings: QuarterlyReviewSettings },
 ) {
 	try {
-		// Initialize Periodic Notes integration
 		const periodicNotesUtil = new PeriodicNotesUtil(plugin.app);
 
-		// Check if daily/weekly notes functionality is available
 		if (!periodicNotesUtil.arePeriodicNotesConfigured()) {
 			new Notice(
 				"Daily/Weekly notes functionality is not available. Please enable Daily Notes or install Periodic Notes plugin.",
@@ -66,7 +49,7 @@ export async function buildQuarterlyReview(
 		// Show quarter selection modal
 		const modal = new QuarterSelectionModal(
 			plugin,
-			async (selectedQuarter: Quarter) => {
+			async (selectedQuarter: QuarterInfo) => {
 				await createQuarterlyReview(
 					plugin,
 					selectedQuarter,
@@ -85,7 +68,7 @@ export async function buildQuarterlyReview(
 
 async function createQuarterlyReview(
 	plugin: Plugin & { settings: QuarterlyReviewSettings },
-	selectedQuarter: Quarter,
+	selectedQuarter: QuarterInfo,
 	periodicNotesIntegration: PeriodicNotesUtil,
 ) {
 	try {
