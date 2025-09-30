@@ -1,7 +1,4 @@
-import {
-	generateQuarters,
-	getCurrentQuarter,
-} from "../../src/utils/quarter-utils";
+import { generateQuarters } from "../../src/utils/quarter-utils";
 
 describe("generateQuarters - Core Requirement Tests", () => {
 	test("returns current quarter and at least 4 previous quarters for Q1 2024", () => {
@@ -133,23 +130,5 @@ describe("generateQuarters - Core Requirement Tests", () => {
 		expect(years.length).toBeGreaterThan(1);
 		expect(years).toContain(2023);
 		expect(years).toContain(2024);
-	});
-});
-
-describe("getCurrentQuarter", () => {
-	test("has implementation bug but structure is testable", () => {
-		// Note: getCurrentQuarter() calls generateQuarters(6) but should call generateQuarters()
-		// This is a bug in the implementation
-		try {
-			const result = getCurrentQuarter();
-			// If it works, verify structure
-			expect(result).toHaveProperty("quarter");
-			expect(result).toHaveProperty("year");
-			expect(result).toHaveProperty("startDate");
-			expect(result).toHaveProperty("endDate");
-		} catch (error) {
-			// Expected to fail due to bug
-			expect(error.message).toContain("getFullYear is not a function");
-		}
 	});
 });

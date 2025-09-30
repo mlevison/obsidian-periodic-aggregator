@@ -83,17 +83,3 @@ function formatDate(date: Date): string {
 
 	return `${month} ${day}, ${year}`;
 }
-
-/**
- * Get the current quarter information
- */
-export function getCurrentQuarter(): QuarterInfo {
-	const quarters = generateQuarters();
-	const now = new Date();
-
-	// Find the quarter that contains the current date
-	return (
-		quarters.find((q) => now >= q.startDate && now <= q.endDate) ||
-		quarters[2]
-	); // Fallback to middle quarter
-}
