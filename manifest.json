@@ -6,8 +6,5 @@
 	"description": "Build quarterly reviews with configurable temp folder path",
 	"author": "Your Name",
 	"authorUrl": "",
-	"isDesktopOnly": false,
-	"dependencies": {
-		"periodic-notes": "0.0.17"
-	}
+	"isDesktopOnly": false
 }
