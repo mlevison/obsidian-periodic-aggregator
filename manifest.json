@@ -1,6 +1,6 @@
 {
-	"id": "quarterly-review-builder",
-	"name": "Quarterly Review Builder",
+	"id": "obsidian-review-builder",
+	"name": "Obsidian Review Builder",
 	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Simplify quarterly and weekly reviews by combing many Daily and Weekly notes.",
