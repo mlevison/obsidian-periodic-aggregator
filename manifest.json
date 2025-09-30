@@ -3,7 +3,7 @@
 	"name": "Quarterly Review Builder",
 	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
-	"description": "Build quarterly reviews with configurable temp folder path",
+	"description": "Simplify quarterly and weekly reviews by combing many Daily and Weekly notes.",
 	"author": "Mark Levison",
 	"authorUrl": "http://github.com/mlevison",
 	"isDesktopOnly": false
