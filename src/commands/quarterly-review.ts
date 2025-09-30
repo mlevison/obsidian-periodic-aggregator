@@ -21,7 +21,7 @@ class QuarterSelectionModal extends SuggestModal<QuarterInfo> {
 	}
 
 	getSuggestions(query: string): QuarterInfo[] {
-		const quarters = generateQuarters(6);
+		const quarters = generateQuarters();
 
 		return quarters.filter((quarter) =>
 			quarter.dateRangeLabel.toLowerCase().includes(query.toLowerCase()),

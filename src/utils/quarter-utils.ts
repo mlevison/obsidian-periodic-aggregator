@@ -12,14 +12,11 @@ export interface QuarterInfo {
  * Generates a list of quarters dynamically based on the current date.
  * Quarters start in January, April, July, and October.
  *
- * @param count Number of quarters to generate (default: 6)
  * @param fromDate Starting date for calculation (default: current date)
  * @returns Array of QuarterInfo objects
  */
-export function generateQuarters(
-	count = 6,
-	fromDate: Date = new Date(),
-): QuarterInfo[] {
+export function generateQuarters(fromDate: Date = new Date()): QuarterInfo[] {
+	const numberQuarters = 6;
 	const quarters: QuarterInfo[] = [];
 	const currentYear = fromDate.getFullYear();
 	const currentMonth = fromDate.getMonth();
@@ -29,9 +26,9 @@ export function generateQuarters(
 
 	// Start from the current quarter and go backwards/forwards to get 6 quarters
 	// We'll include the current quarter and 2 previous + 3 future quarters
-	const startOffset = -2; // Start 2 quarters before current
+	const startOffset = -5; // Start 2 quarters before current
 
-	for (let i = 0; i < count; i++) {
+	for (let i = 0; i < numberQuarters; i++) {
 		const quarterOffset = startOffset + i;
 		const targetYear =
 			currentYear + Math.floor((currentQuarterIndex + quarterOffset) / 4);
@@ -91,7 +88,7 @@ function formatDate(date: Date): string {
  * Get the current quarter information
  */
 export function getCurrentQuarter(): QuarterInfo {
-	const quarters = generateQuarters(6);
+	const quarters = generateQuarters();
 	const now = new Date();
 
 	// Find the quarter that contains the current date
