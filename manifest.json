@@ -1,10 +1,10 @@
 {
 	"id": "quarterly-review-builder",
 	"name": "Quarterly Review Builder",
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Build quarterly reviews with configurable temp folder path",
-	"author": "Your Name",
-	"authorUrl": "",
+	"author": "Mark Levison",
+	"authorUrl": "http://github.com/mlevison",
 	"isDesktopOnly": false
 }
