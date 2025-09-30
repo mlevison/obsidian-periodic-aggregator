@@ -30,48 +30,6 @@ Now each quarter, I have two files to look at: quarterly_days.md and quarterly_w
 3. Click **Browse** and search for "Quarterly Review Builder"
 4. Click **Install** and then **Enable**
 
-## Usage
-
-### Creating a Quarterly Review
-
-1. Ensure the **Periodic Notes** plugin is installed and enabled
-2. Open Command Palette (Ctrl/Cmd + P)
-3. Type "Build Quarterly Review" and select the command
-4. Select which quarter you want to review from the list
-5. The plugin will:
-   - Scan for your Daily and Weekly notes using Periodic Notes settings
-   - Create separate temp files for Daily Notes (`quaterly_days.md`) and Weekly Notes (`quaterly_weeks.md`)
-   - Include references to the separate Daily and Weekly notes temp files
-
-### Configuring Settings
-
-1. Go to **Settings → Plugin Options → Quarterly Review Builder**
-2. Set your preferred **Temp Folder Path** (default: "temp")
-   - The folder will be created automatically if it doesn't exist
-   - Use forward slashes for nested folders (e.g., "reviews/quarterly")
-3. Configure your quarters in the settings (dates for Q1, Q2, Q3, Q4)
-
-## Notes Integration
-
-The plugin automatically:
-- Finds all Daily notes in your configured Daily notes folder
-- Finds all Weekly notes in your configured Weekly notes folder
-- Creates separate temp files for Daily (`quaterly_days.md`) and Weekly (`quaterly_weeks.md`) notes
-- Includes the full content of each note type in their respective temp files
-- Provides references to these temp files in the main quarterly review
-- Shows folder paths and date formats being used
-- Handles cases where folders don't exist or contain no notes
-
-### Temp Files Created
-
-When you run the quarterly review builder, the following files may be created in your temp folder:
-
-- `quaterly_days.md` - Contains all Daily notes content with headers and formatting
-- `quaterly_weeks.md` - Contains all Weekly notes content with headers and formatting
-- `Q{quarter}_{year}_Review.md` - Main quarterly review file with references to the above temp files
-
-The temp files are automatically overwritten each time you run the command to ensure they contain the most current data.
-
 ## Development
 
 This plugin is built using:
@@ -119,13 +77,6 @@ src/
 ## License
 
 [MIT License](LICENSE)
-
-## Troubleshooting
-
-### Common Issues
-- **"Daily/Weekly notes folder does not exist"**: Check your Periodic Notes settings and create the folders
-- **"No daily/weekly notes found"**: Ensure you have notes in the correct format in the configured folders
-- **Links not working in quarterly review**: Ensure the temp files (`quaterly_days.md`, `quaterly_weeks.md`) exist in the same folder as your quarterly review file
 
 ## Support
 
