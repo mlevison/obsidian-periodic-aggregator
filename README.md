@@ -7,7 +7,8 @@ An Obsidian plugin that helps you create structured quarterly reviews by integra
 - **Quarter Selection**: Choose which quarter to review from your configured quarters
 - **Periodic Notes Integration**: Automatically finds and includes your Daily and Weekly notes
 - **Configurable Temp Folder**: Set a custom folder path where quarterly review files will be created
-- **Notes Aggregation**: Automatically includes content from your Daily and Weekly notes in the review
+- **Separate Temp Files**: Creates separate temp files for Daily Notes (`quaterly_days.md`) and Weekly Notes (`quaterly_weeks.md`)
+- **Notes Aggregation**: References your Daily and Weekly notes through linked temp files
 - **Structured Template**: Creates a comprehensive quarterly review template with sections for:
   - Goals & Objectives
   - Key Achievements
@@ -15,7 +16,7 @@ An Obsidian plugin that helps you create structured quarterly reviews by integra
   - Metrics & KPIs
   - Next Quarter Planning
   - Action Items
-  - Aggregated Notes from Periodic Notes
+  - References to Daily and Weekly Notes temp files
 
 ## Dependencies
 
@@ -53,10 +54,11 @@ This plugin requires the **Periodic Notes** plugin to be installed and enabled:
 4. Select which quarter you want to review from the list
 5. The plugin will:
    - Scan for your Daily and Weekly notes using Periodic Notes settings
-   - Create a new markdown file in your configured temp folder
-   - Name the file `Q{quarter}_{year}_Review.md` (e.g., `Q2_2024_Review.md`)
-   - Include all found Daily and Weekly notes content in the review
-   - Open the file with a pre-filled template and aggregated notes
+   - Create separate temp files for Daily Notes (`quaterly_days.md`) and Weekly Notes (`quaterly_weeks.md`)
+   - Create a new quarterly review markdown file in your configured temp folder
+   - Name the quarterly review file `Q{quarter}_{year}_Review.md` (e.g., `Q2_2024_Review.md`)
+   - Include references to the separate Daily and Weekly notes temp files
+   - Open the quarterly review file with a pre-filled template
 
 ### Configuring Settings
 
@@ -84,7 +86,7 @@ The generated quarterly review includes the following sections:
 - **Challenges & Lessons Learned**: Reflection on difficulties and learning
 - **Metrics & KPIs**: Table format for tracking key performance indicators
 - **Next Quarter Planning**: Forward-looking priorities and action items
-- **Notes from Periodic Notes**: Automatically aggregated Daily and Weekly notes
+- **Periodic Notes References**: Links to separate temp files containing Daily and Weekly notes
 - **Additional Notes**: Space for additional reflections
 
 ## Notes Integration
@@ -92,10 +94,21 @@ The generated quarterly review includes the following sections:
 The plugin automatically:
 - Finds all Daily notes in your configured Daily notes folder
 - Finds all Weekly notes in your configured Weekly notes folder
-- Includes the full content of each note in the quarterly review
-- Provides summaries of how many notes were found
+- Creates separate temp files for Daily (`quaterly_days.md`) and Weekly (`quaterly_weeks.md`) notes
+- Includes the full content of each note type in their respective temp files
+- Provides references to these temp files in the main quarterly review
 - Shows folder paths and date formats being used
 - Handles cases where folders don't exist or contain no notes
+
+### Temp Files Created
+
+When you run the quarterly review builder, the following files may be created in your temp folder:
+
+- `quaterly_days.md` - Contains all Daily notes content with headers and formatting
+- `quaterly_weeks.md` - Contains all Weekly notes content with headers and formatting
+- `Q{quarter}_{year}_Review.md` - Main quarterly review file with references to the above temp files
+
+The temp files are automatically overwritten each time you run the command to ensure they contain the most current data.
 
 ## Development
 
@@ -152,7 +165,8 @@ src/
 - **"Periodic Notes plugin is required but not found"**: Install and enable the Periodic Notes plugin
 - **"Daily/Weekly notes folder does not exist"**: Check your Periodic Notes settings and create the folders
 - **"No daily/weekly notes found"**: Ensure you have notes in the correct format in the configured folders
-- **Notes not appearing in review**: Verify your date format settings in Periodic Notes match your actual note names
+- **Temp files not created**: Check that your temp folder path is valid and writable
+- **Links not working in quarterly review**: Ensure the temp files (`quaterly_days.md`, `quaterly_weeks.md`) exist in the same folder as your quarterly review file
 
 ## Support
 

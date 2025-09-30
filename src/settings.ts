@@ -4,7 +4,7 @@ export interface QuarterlyReviewSettings {
 }
 
 export const DEFAULT_SETTINGS: QuarterlyReviewSettings = {
-	tempFolderPath: "/temp",
+	tempFolderPath: "temp",
 
 	quarters: [
 		new Date(2025, 0, 1),

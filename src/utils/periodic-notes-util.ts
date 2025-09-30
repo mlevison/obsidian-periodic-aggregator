@@ -15,7 +15,7 @@ export interface NotesInfo {
 	weeklyFormat: string | null;
 }
 
-export class PeriodicNotesIntegration {
+export class PeriodicNotesUtil {
 	private app: App;
 
 	constructor(app: App) {
@@ -26,7 +26,7 @@ export class PeriodicNotesIntegration {
 	 * Check if daily or weekly notes functionality is available
 	 * This now checks if the daily-notes-interface can access the settings
 	 */
-	isPeriodicNotesAvailable(): boolean {
+	arePeriodicNotesConfigured(): boolean {
 		try {
 			// Try to get settings to see if daily/weekly notes are configured
 			const dailySettings = getDailyNoteSettings();
@@ -161,5 +161,60 @@ export class PeriodicNotesIntegration {
 		}
 
 		return summary;
+	}
+
+	/**
+	 * Write daily and weekly notes to separate temp files
+	 */
+	async writeSeparateTempFiles(
+		dailyNotes: TFile[],
+		weeklyNotes: TFile[],
+		tempFolderPath: string,
+	): Promise<{
+		dailyFilePath: string | null;
+		weeklyFilePath: string | null;
+	}> {
+		let dailyFilePath: string | null = null;
+		let weeklyFilePath: string | null = null;
+
+		// Ensure temp folder exists
+		const tempFolder = this.app.vault.getAbstractFileByPath(tempFolderPath);
+		if (!tempFolder) {
+			await this.app.vault.createFolder(tempFolderPath);
+		}
+
+		// Write daily notes to quaterly_days.md
+		if (dailyNotes.length > 0) {
+			const dailyContent = await this.getNotesContent(dailyNotes);
+			const dailyFileContent = `# Daily Notes Summary\n\n${dailyContent.join("")}`;
+			dailyFilePath = `${tempFolderPath}/quaterly_days.md`;
+
+			// Check if file exists and delete it first
+			const existingDailyFile =
+				this.app.vault.getAbstractFileByPath(dailyFilePath);
+			if (existingDailyFile) {
+				await this.app.vault.delete(existingDailyFile);
+			}
+
+			await this.app.vault.create(dailyFilePath, dailyFileContent);
+		}
+
+		// Write weekly notes to quaterly_weeks.md
+		if (weeklyNotes.length > 0) {
+			const weeklyContent = await this.getNotesContent(weeklyNotes);
+			const weeklyFileContent = `# Weekly Notes Summary\n\n${weeklyContent.join("")}`;
+			weeklyFilePath = `${tempFolderPath}/quaterly_weeks.md`;
+
+			// Check if file exists and delete it first
+			const existingWeeklyFile =
+				this.app.vault.getAbstractFileByPath(weeklyFilePath);
+			if (existingWeeklyFile) {
+				await this.app.vault.delete(existingWeeklyFile);
+			}
+
+			await this.app.vault.create(weeklyFilePath, weeklyFileContent);
+		}
+
+		return { dailyFilePath, weeklyFilePath };
 	}
 }
