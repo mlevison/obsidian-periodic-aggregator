@@ -1,12 +1,13 @@
 # Quarterly Review Builder
 
-An Obsidian plugin that helps you create structured quarterly reviews with a single command and configurable temp folder path.
+An Obsidian plugin that helps you create structured quarterly reviews by integrating with your Daily and Weekly notes from the Periodic Notes plugin.
 
 ## Features
 
-- **Single Command**: "Build Quarterly Review" command accessible via Command Palette (Ctrl/Cmd + P)
+- **Quarter Selection**: Choose which quarter to review from your configured quarters
+- **Periodic Notes Integration**: Automatically finds and includes your Daily and Weekly notes
 - **Configurable Temp Folder**: Set a custom folder path where quarterly review files will be created
-- **Automatic Quarter Detection**: Automatically determines the current quarter and year
+- **Notes Aggregation**: Automatically includes content from your Daily and Weekly notes in the review
 - **Structured Template**: Creates a comprehensive quarterly review template with sections for:
   - Goals & Objectives
   - Key Achievements
@@ -14,6 +15,14 @@ An Obsidian plugin that helps you create structured quarterly reviews with a sin
   - Metrics & KPIs
   - Next Quarter Planning
   - Action Items
+  - Aggregated Notes from Periodic Notes
+
+## Dependencies
+
+This plugin requires the **Periodic Notes** plugin to be installed and enabled:
+- Install from Community Plugins: [Periodic Notes](https://github.com/liamcain/obsidian-periodic-notes)
+- The plugin will automatically detect your Daily and Weekly notes configuration
+- Works with custom folder paths and date formats configured in Periodic Notes
 
 ## Installation
 
@@ -38,13 +47,16 @@ An Obsidian plugin that helps you create structured quarterly reviews with a sin
 
 ### Creating a Quarterly Review
 
-1. Open Command Palette (Ctrl/Cmd + P)
-2. Type "Build Quarterly Review" and select the command
-3. The plugin will:
-   - Automatically detect the current quarter (Q1, Q2, Q3, or Q4)
+1. Ensure the **Periodic Notes** plugin is installed and enabled
+2. Open Command Palette (Ctrl/Cmd + P)
+3. Type "Build Quarterly Review" and select the command
+4. Select which quarter you want to review from the list
+5. The plugin will:
+   - Scan for your Daily and Weekly notes using Periodic Notes settings
    - Create a new markdown file in your configured temp folder
    - Name the file `Q{quarter}_{year}_Review.md` (e.g., `Q2_2024_Review.md`)
-   - Open the file with a pre-filled template
+   - Include all found Daily and Weekly notes content in the review
+   - Open the file with a pre-filled template and aggregated notes
 
 ### Configuring Settings
 
@@ -52,18 +64,38 @@ An Obsidian plugin that helps you create structured quarterly reviews with a sin
 2. Set your preferred **Temp Folder Path** (default: "temp")
    - The folder will be created automatically if it doesn't exist
    - Use forward slashes for nested folders (e.g., "reviews/quarterly")
+3. Configure your quarters in the settings (dates for Q1, Q2, Q3, Q4)
+
+### Periodic Notes Configuration
+
+The plugin automatically uses your Periodic Notes settings:
+- **Daily Notes**: Folder path and date format from Periodic Notes
+- **Weekly Notes**: Folder path and date format from Periodic Notes
+- If folders don't exist or no notes are found, the plugin will notify you
+- Supports custom date formats configured in Periodic Notes
 
 ## Template Structure
 
 The generated quarterly review includes the following sections:
 
-- **Quarter Overview**: Basic information about the period
+- **Quarter Overview**: Basic information about the period, including notes count
 - **Goals & Objectives**: Checklist format for tracking goals
 - **Key Achievements**: List of accomplishments
 - **Challenges & Lessons Learned**: Reflection on difficulties and learning
 - **Metrics & KPIs**: Table format for tracking key performance indicators
 - **Next Quarter Planning**: Forward-looking priorities and action items
-- **Notes**: Space for additional reflections
+- **Notes from Periodic Notes**: Automatically aggregated Daily and Weekly notes
+- **Additional Notes**: Space for additional reflections
+
+## Notes Integration
+
+The plugin automatically:
+- Finds all Daily notes in your configured Daily notes folder
+- Finds all Weekly notes in your configured Weekly notes folder
+- Includes the full content of each note in the quarterly review
+- Provides summaries of how many notes were found
+- Shows folder paths and date formats being used
+- Handles cases where folders don't exist or contain no notes
 
 ## Development
 
@@ -95,6 +127,8 @@ src/
 ├── commands/
 │   ├── index.ts         # Command registration
 │   └── quarterly-review.ts # Quarterly review implementation
+├── utils/
+│   └── periodic-notes-integration.ts # Periodic Notes plugin integration
 └── ui/
     └── settings-tab.ts  # Settings UI component
 ```
@@ -110,6 +144,15 @@ src/
 ## License
 
 [MIT License](LICENSE)
+
+## Troubleshooting
+
+### Common Issues
+
+- **"Periodic Notes plugin is required but not found"**: Install and enable the Periodic Notes plugin
+- **"Daily/Weekly notes folder does not exist"**: Check your Periodic Notes settings and create the folders
+- **"No daily/weekly notes found"**: Ensure you have notes in the correct format in the configured folders
+- **Notes not appearing in review**: Verify your date format settings in Periodic Notes match your actual note names
 
 ## Support
 

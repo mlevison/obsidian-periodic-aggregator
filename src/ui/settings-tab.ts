@@ -1,5 +1,5 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
-import { QuarterlyReviewSettings } from "../settings";
+import { QuarterlyReviewSettings, DEFAULT_SETTINGS } from "../settings";
 
 export interface SettingsPlugin extends Plugin {
 	settings: QuarterlyReviewSettings;
@@ -30,7 +30,7 @@ export class QuarterlyReviewSettingTab extends PluginSettingTab {
 			)
 			.addText((text) =>
 				text
-					.setPlaceholder("/temp")
+					.setPlaceholder(DEFAULT_SETTINGS.tempFolderPath)
 					.setValue(this.plugin.settings.tempFolderPath)
 					.onChange(async (value) => {
 						this.plugin.settings.tempFolderPath = value || "temp";
