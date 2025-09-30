@@ -101,7 +101,7 @@ async function createQuarterlyReview(
 		);
 
 		// Open the newly created file
-		let createdFilesMessage = `Files created for ${selectedQuarter.label}:`;
+		let createdFilesMessage = "";
 		if (tempFiles.dailyFilePath) {
 			const fileName = tempFiles.dailyFilePath.split("/").pop();
 			createdFilesMessage += `\nDaily notes written to: ${fileName}`;
@@ -122,8 +122,14 @@ async function createQuarterlyReview(
 				await plugin.app.workspace.getLeaf().openFile(weeklyFile);
 			}
 		}
-
-		new Notice(createdFilesMessage);
+		if (createdFilesMessage.length === 0) {
+			createdFilesMessage = `No files created for ${selectedQuarter.label}.`;
+		} else {
+			new Notice(
+				`Files created for ${selectedQuarter.label}:` +
+					createdFilesMessage,
+			);
+		}
 	} catch (error) {
 		console.error("Error creating quarterly review:", error);
 		new Notice(
