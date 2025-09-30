@@ -1,6 +1,10 @@
 import { Notice, Plugin, SuggestModal, TFile } from "obsidian";
 import { QuarterlyReviewSettings } from "../settings";
-import { PeriodicNotesUtil, NotesInfo } from "../utils/periodic-notes-util";
+import {
+	PeriodicNotesUtil,
+	NotesInfo,
+	DateRange,
+} from "../utils/periodic-notes-util";
 import { generateQuarters, QuarterInfo } from "../utils/quarter-utils";
 
 class QuarterSelectionModal extends SuggestModal<QuarterInfo> {
@@ -74,25 +78,33 @@ async function createQuarterlyReview(
 	try {
 		const { tempFolderPath } = plugin.settings;
 
-		// Get Daily and Weekly notes information
-		new Notice("Scanning for Daily and Weekly notes...");
+		// Get Daily and Weekly notes information for the selected quarter
+		new Notice(
+			`Scanning for Daily and Weekly notes in ${selectedQuarter.dateRangeLabel}...`,
+		);
+		const dateRange: DateRange = {
+			startDate: selectedQuarter.startDate,
+			endDate: selectedQuarter.endDate,
+		};
 		const notesInfo: NotesInfo =
-			await periodicNotesIntegration.getNotesInfo();
+			await periodicNotesIntegration.getNotesInfo(dateRange);
 
 		// Write daily and weekly notes to separate temp files
 		new Notice(
-			"Creating separate temp files for daily and weekly notes...",
+			`Creating separate temp files for daily and weekly notes from ${selectedQuarter.label}...`,
 		);
 		const tempFiles = await periodicNotesIntegration.writeSeparateTempFiles(
 			notesInfo.dailyNotes,
 			notesInfo.weeklyNotes,
 			tempFolderPath,
+			selectedQuarter,
 		);
 
 		// Open the newly created file
-		let createdFilesMessage = `Files created:`;
+		let createdFilesMessage = `Files created for ${selectedQuarter.label}:`;
 		if (tempFiles.dailyFilePath) {
-			createdFilesMessage += `\nDaily notes written to: quaterly_days.md`;
+			const fileName = tempFiles.dailyFilePath.split("/").pop();
+			createdFilesMessage += `\nDaily notes written to: ${fileName}`;
 			const dailyFile = plugin.app.vault.getAbstractFileByPath(
 				tempFiles.dailyFilePath,
 			);
@@ -101,7 +113,8 @@ async function createQuarterlyReview(
 			}
 		}
 		if (tempFiles.weeklyFilePath) {
-			createdFilesMessage += `\nWeekly notes written to: quaterly_weeks.md`;
+			const fileName = tempFiles.weeklyFilePath.split("/").pop();
+			createdFilesMessage += `\nWeekly notes written to: ${fileName}`;
 			const weeklyFile = plugin.app.vault.getAbstractFileByPath(
 				tempFiles.weeklyFilePath,
 			);

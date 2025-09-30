@@ -15,6 +15,11 @@ export interface NotesInfo {
 	weeklyFormat: string | null;
 }
 
+export interface DateRange {
+	startDate: Date;
+	endDate: Date;
+}
+
 export class PeriodicNotesUtil {
 	private app: App;
 
@@ -40,8 +45,9 @@ export class PeriodicNotesUtil {
 
 	/**
 	 * Get Daily and Weekly notes information using obsidian-daily-notes-interface
+	 * Optionally filter by date range
 	 */
-	async getNotesInfo(): Promise<NotesInfo> {
+	async getNotesInfo(dateRange?: DateRange): Promise<NotesInfo> {
 		try {
 			// Get settings using the interface
 			const dailySettings = getDailyNoteSettings();
@@ -51,9 +57,17 @@ export class PeriodicNotesUtil {
 			const allDailyNotes = getAllDailyNotes();
 			const allWeeklyNotes = getAllWeeklyNotes();
 
-			// Convert objects to TFile arrays
-			const dailyNotes: TFile[] = Object.values(allDailyNotes);
-			const weeklyNotes: TFile[] = Object.values(allWeeklyNotes);
+			// Filter and convert to TFile arrays based on date range
+			const dailyNotes: TFile[] = this.filterNotesByDateRange(
+				allDailyNotes,
+				dateRange,
+				dailySettings?.format || "YYYY-MM-DD",
+			);
+			const weeklyNotes: TFile[] = this.filterNotesByDateRange(
+				allWeeklyNotes,
+				dateRange,
+				weeklySettings?.format || "gggg-[W]ww",
+			);
 
 			// Extract folder and format information
 			const dailyFolder = dailySettings?.folder || null;
@@ -61,9 +75,19 @@ export class PeriodicNotesUtil {
 			const weeklyFolder = weeklySettings?.folder || null;
 			const weeklyFormat = weeklySettings?.format || null;
 
-			// Post notices about results
-			this.checkAndNotifyResults("Daily", dailyFolder, dailyNotes);
-			this.checkAndNotifyResults("Weekly", weeklyFolder, weeklyNotes);
+			// Post notices about results with date range context
+			this.checkAndNotifyResultsWithDateRange(
+				"Daily",
+				dailyFolder,
+				dailyNotes,
+				dateRange,
+			);
+			this.checkAndNotifyResultsWithDateRange(
+				"Weekly",
+				weeklyFolder,
+				weeklyNotes,
+				dateRange,
+			);
 
 			return {
 				dailyNotes,
@@ -87,6 +111,99 @@ export class PeriodicNotesUtil {
 				weeklyFormat: null,
 			};
 		}
+	}
+
+	/**
+	 * Filter notes by date range based on their date keys
+	 */
+	private filterNotesByDateRange(
+		notesObject: Record<string, TFile>,
+		dateRange: DateRange | undefined,
+		format: string,
+	): TFile[] {
+		if (!dateRange) {
+			return Object.values(notesObject);
+		}
+
+		const filteredNotes: TFile[] = [];
+
+		for (const [dateKey, file] of Object.entries(notesObject)) {
+			try {
+				const noteDate = this.parseDateFromKey(dateKey, format);
+				if (noteDate && this.isDateInRange(noteDate, dateRange)) {
+					filteredNotes.push(file);
+				}
+			} catch (error) {
+				console.warn(
+					`Could not parse date from key "${dateKey}" with format "${format}":`,
+					error,
+				);
+				// Include the note if we can't parse the date to be safe
+				filteredNotes.push(file);
+			}
+		}
+
+		return filteredNotes;
+	}
+
+	/**
+	 * Parse date from note key based on format
+	 */
+	private parseDateFromKey(dateKey: string, format: string): Date | null {
+		try {
+			// Handle common daily note formats
+			if (format.includes("YYYY-MM-DD") || format === "YYYY-MM-DD") {
+				const match = dateKey.match(/(\d{4})-(\d{2})-(\d{2})/);
+				if (match) {
+					const year = parseInt(match[1], 10);
+					const month = parseInt(match[2], 10) - 1; // Month is 0-indexed
+					const day = parseInt(match[3], 10);
+					return new Date(year, month, day);
+				}
+			}
+
+			// Handle weekly note formats (ISO week format)
+			if (format.includes("gggg") && format.includes("ww")) {
+				const match = dateKey.match(/(\d{4})-W(\d{2})/);
+				if (match) {
+					const year = parseInt(match[1], 10);
+					const week = parseInt(match[2], 10);
+					return this.getDateFromWeek(year, week);
+				}
+			}
+
+			// Try to parse as a standard date string
+			const parsed = new Date(dateKey);
+			if (!isNaN(parsed.getTime())) {
+				return parsed;
+			}
+
+			return null;
+		} catch (error) {
+			console.warn(`Error parsing date from key "${dateKey}":`, error);
+			return null;
+		}
+	}
+
+	/**
+	 * Get date from ISO week number
+	 */
+	private getDateFromWeek(year: number, week: number): Date {
+		const jan4 = new Date(year, 0, 4);
+		const jan4Day = jan4.getDay() || 7; // Make Sunday = 7
+		const mondayOfWeek1 = new Date(
+			jan4.getTime() - (jan4Day - 1) * 24 * 60 * 60 * 1000,
+		);
+		return new Date(
+			mondayOfWeek1.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000,
+		);
+	}
+
+	/**
+	 * Check if a date falls within the specified range
+	 */
+	private isDateInRange(date: Date, dateRange: DateRange): boolean {
+		return date >= dateRange.startDate && date <= dateRange.endDate;
 	}
 
 	/**
@@ -114,6 +231,38 @@ export class PeriodicNotesUtil {
 			new Notice(`No ${type.toLowerCase()} notes found`);
 		} else {
 			new Notice(`Found ${notes.length} ${type.toLowerCase()} notes`);
+		}
+	}
+
+	/**
+	 * Check results and post appropriate notices with date range context
+	 */
+	private checkAndNotifyResultsWithDateRange(
+		type: string,
+		folder: string | null,
+		notes: TFile[],
+		dateRange?: DateRange,
+	): void {
+		if (!folder && folder !== "") {
+			new Notice(`${type} notes are not configured or enabled`);
+			return;
+		}
+
+		if (folder && folder !== "") {
+			const folderObj = this.app.vault.getAbstractFileByPath(folder);
+			if (!folderObj) {
+				new Notice(`${type} notes folder "${folder}" does not exist`);
+				return;
+			}
+		}
+
+		const rangeText = dateRange ? " in selected quarter" : "";
+		if (notes.length === 0) {
+			new Notice(`No ${type.toLowerCase()} notes found${rangeText}`);
+		} else {
+			new Notice(
+				`Found ${notes.length} ${type.toLowerCase()} notes${rangeText}`,
+			);
 		}
 	}
 
@@ -170,6 +319,7 @@ export class PeriodicNotesUtil {
 		dailyNotes: TFile[],
 		weeklyNotes: TFile[],
 		tempFolderPath: string,
+		quarterInfo?: { label: string; quarter: number; year: number },
 	): Promise<{
 		dailyFilePath: string | null;
 		weeklyFilePath: string | null;
@@ -183,11 +333,16 @@ export class PeriodicNotesUtil {
 			await this.app.vault.createFolder(tempFolderPath);
 		}
 
-		// Write daily notes to quaterly_days.md
+		// Write daily notes to quarter-specific file
 		if (dailyNotes.length > 0) {
 			const dailyContent = await this.getNotesContent(dailyNotes);
-			const dailyFileContent = `# Daily Notes Summary\n\n${dailyContent.join("")}`;
-			dailyFilePath = `${tempFolderPath}/quaterly_days.md`;
+			const quarterLabel = quarterInfo
+				? `_${quarterInfo.label.replace(/\s/g, "_")}`
+				: "";
+			const dailyFileContent = quarterInfo
+				? `# Daily Notes Summary - ${quarterInfo.label}\n\n${dailyContent.join("")}`
+				: `# Daily Notes Summary\n\n${dailyContent.join("")}`;
+			dailyFilePath = `${tempFolderPath}/quarterly_days${quarterLabel}.md`;
 
 			// Check if file exists and delete it first
 			const existingDailyFile =
@@ -199,11 +354,16 @@ export class PeriodicNotesUtil {
 			await this.app.vault.create(dailyFilePath, dailyFileContent);
 		}
 
-		// Write weekly notes to quaterly_weeks.md
+		// Write weekly notes to quarter-specific file
 		if (weeklyNotes.length > 0) {
 			const weeklyContent = await this.getNotesContent(weeklyNotes);
-			const weeklyFileContent = `# Weekly Notes Summary\n\n${weeklyContent.join("")}`;
-			weeklyFilePath = `${tempFolderPath}/quaterly_weeks.md`;
+			const quarterLabel = quarterInfo
+				? `_${quarterInfo.label.replace(/\s/g, "_")}`
+				: "";
+			const weeklyFileContent = quarterInfo
+				? `# Weekly Notes Summary - ${quarterInfo.label}\n\n${weeklyContent.join("")}`
+				: `# Weekly Notes Summary\n\n${weeklyContent.join("")}`;
+			weeklyFilePath = `${tempFolderPath}/quarterly_weeks${quarterLabel}.md`;
 
 			// Check if file exists and delete it first
 			const existingWeeklyFile =
