@@ -1,5 +1,5 @@
 import { DateRange } from "../../src/utils/periodic-notes-util";
-../../src/utils/periodic-notes-util
+
 describe("PeriodicNotesUtil", () => {
 	describe("DateRange interface", () => {
 		it("should define DateRange interface correctly", () => {
