@@ -1,0 +1,2 @@
+- parseDateFromKey relies on a randomly determined Date/Week format. That information should be pulled from obsidian-daily-notes-interface
+- create test cases that simulate it finding files in several different formats
