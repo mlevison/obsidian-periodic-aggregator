@@ -2,6 +2,8 @@ import { App, TFile, Notice } from "obsidian";
 import {
 	getAllDailyNotes,
 	getAllWeeklyNotes,
+	getDailyNote,
+	getWeeklyNote,
 	getDailyNoteSettings,
 	getWeeklyNoteSettings,
 } from "obsidian-daily-notes-interface";
@@ -25,6 +27,11 @@ export class PeriodicNotesUtil {
 
 	constructor(app: App) {
 		this.app = app;
+	}
+
+	// Type declaration for window.moment
+	private get moment() {
+		return (window as any).moment;
 	}
 
 	/**
@@ -53,20 +60,16 @@ export class PeriodicNotesUtil {
 			const dailySettings = getDailyNoteSettings();
 			const weeklySettings = getWeeklyNoteSettings();
 
-			// Get all notes using the interface
-			const allDailyNotes = getAllDailyNotes();
-			const allWeeklyNotes = getAllWeeklyNotes();
+			// Get all notes using the interface - these are retrieved within filterNotesByDateRange
 
 			// Filter and convert to TFile arrays based on date range
 			const dailyNotes: TFile[] = this.filterNotesByDateRange(
-				allDailyNotes,
+				"daily",
 				dateRange,
-				dailySettings?.format || "YYYY-MM-DD",
 			);
 			const weeklyNotes: TFile[] = this.filterNotesByDateRange(
-				allWeeklyNotes,
+				"weekly",
 				dateRange,
-				weeklySettings?.format || "gggg-[W]ww",
 			);
 
 			// Extract folder and format information
@@ -117,93 +120,50 @@ export class PeriodicNotesUtil {
 	 * Filter notes by date range based on their date keys
 	 */
 	private filterNotesByDateRange(
-		notesObject: Record<string, TFile>,
+		notesType: "daily" | "weekly",
 		dateRange: DateRange | undefined,
-		format: string,
 	): TFile[] {
 		if (!dateRange) {
-			return Object.values(notesObject);
+			// Return all notes if no date range specified
+			if (notesType === "daily") {
+				return Object.values(getAllDailyNotes());
+			} else {
+				return Object.values(getAllWeeklyNotes());
+			}
 		}
 
 		const filteredNotes: TFile[] = [];
+		const currentDate = this.moment(dateRange.startDate);
+		const endDate = this.moment(dateRange.endDate);
 
-		for (const [dateKey, file] of Object.entries(notesObject)) {
-			try {
-				const noteDate = this.parseDateFromKey(dateKey, format);
-				if (noteDate && this.isDateInRange(noteDate, dateRange)) {
-					filteredNotes.push(file);
+		if (notesType === "daily") {
+			// Get all daily notes - returns Record<string, TFile>
+			const allDailyNotes = getAllDailyNotes();
+
+			// For daily notes, iterate through each day in the range
+			while (currentDate.isSameOrBefore(endDate, "day")) {
+				const note = getDailyNote(currentDate, allDailyNotes);
+				if (note) {
+					filteredNotes.push(note);
 				}
-			} catch (error) {
-				console.warn(
-					`Could not parse date from key "${dateKey}" with format "${format}":`,
-					error,
-				);
-				// Include the note if we can't parse the date to be safe
-				filteredNotes.push(file);
+				currentDate.add(1, "day");
+			}
+		} else {
+			// Get all weekly notes - this returns Record<string, TFile>
+			const allWeeklyNotes = getAllWeeklyNotes();
+
+			// For weekly notes, iterate through each week in the range
+			currentDate.startOf("week"); // Start from beginning of week
+			while (currentDate.isSameOrBefore(endDate, "week")) {
+				const note = getWeeklyNote(currentDate, allWeeklyNotes);
+				if (note) {
+					filteredNotes.push(note);
+				}
+				currentDate.add(1, "week");
 			}
 		}
 
 		return filteredNotes;
-	}
-
-	/**
-	 * Parse date from note key based on format
-	 */
-	private parseDateFromKey(dateKey: string, format: string): Date | null {
-		try {
-			// Handle common daily note formats
-			if (format.includes("YYYY-MM-DD") || format === "YYYY-MM-DD") {
-				const match = dateKey.match(/(\d{4})-(\d{2})-(\d{2})/);
-				if (match) {
-					const year = parseInt(match[1], 10);
-					const month = parseInt(match[2], 10) - 1; // Month is 0-indexed
-					const day = parseInt(match[3], 10);
-					return new Date(year, month, day);
-				}
-			}
-
-			// Handle weekly note formats (ISO week format)
-			if (format.includes("gggg") && format.includes("ww")) {
-				const match = dateKey.match(/(\d{4})-W(\d{2})/);
-				if (match) {
-					const year = parseInt(match[1], 10);
-					const week = parseInt(match[2], 10);
-					return this.getDateFromWeek(year, week);
-				}
-			}
-
-			// Try to parse as a standard date string
-			const parsed = new Date(dateKey);
-			if (!isNaN(parsed.getTime())) {
-				return parsed;
-			}
-
-			return null;
-		} catch (error) {
-			console.warn(`Error parsing date from key "${dateKey}":`, error);
-			return null;
-		}
-	}
-
-	/**
-	 * Get date from ISO week number
-	 */
-	private getDateFromWeek(year: number, week: number): Date {
-		const jan4 = new Date(year, 0, 4);
-		const jan4Day = jan4.getDay() || 7; // Make Sunday = 7
-		const mondayOfWeek1 = new Date(
-			jan4.getTime() - (jan4Day - 1) * 24 * 60 * 60 * 1000,
-		);
-		return new Date(
-			mondayOfWeek1.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000,
-		);
-	}
-
-	/**
-	 * Check if a date falls within the specified range
-	 */
-	private isDateInRange(date: Date, dateRange: DateRange): boolean {
-		return date >= dateRange.startDate && date <= dateRange.endDate;
 	}
 
 	/**
